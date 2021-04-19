@@ -87,7 +87,7 @@ app.use(fileUpload());
             });;
 
     })
-
+    //-------------------------------------//
     //Getting Doctors Info
     app.get('/doctors', (req, res) => {
         doctorCollection.find({})
