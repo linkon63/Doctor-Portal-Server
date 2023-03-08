@@ -13,29 +13,30 @@ app.use(express.static('doctors'));
 app.use(fileUpload());
 
 
-    //Local Server Work Without Mongo Connections
-    app.get('/', (req, res) => {
-        res.send('Hello Doctor Portal Sever Site ROOT')
-        })
+//Local Server Work Without Mongo Connections
+app.get('/', (req, res) => {
+    res.send('Hello Doctor Portal Sever Site ROOT')
+})
 
 
-    //Mongo DB Start
-    const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ci2re.mongodb.net/doctorsPortal?retryWrites=true&w=majority`;
-    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-    client.connect(err => {
+//Mongo DB Start
+const uri = `mongodb+srv://admin:admin@cluster0.6xo8c1s.mongodb.net/doctorsPortal?retryWrites=true&w=majority`
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ci2re.mongodb.net/doctorsPortal?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+client.connect(err => {
     const appointmentCollection = client.db("doctorsPortal").collection("appointment");
     const doctorCollection = client.db("doctorsPortal").collection("doctors");
 
     // perform actions on the collection object
 
     //Add Appointment from here and Sending DataBase
-    app.post('/addAppointment',(req, res) => {
+    app.post('/addAppointment', (req, res) => {
         const appointment = req.body;
         appointmentCollection.insertOne(appointment)
-        .then(result => {
-            console.log('Appointment Added ', result);
-            res.send(result.insertedCount > 0);
-        })
+            .then(result => {
+                console.log('Appointment Added', result);
+                res.send(result.insertedCount > 0);
+            })
     });
 
     //Getting Data from DataBase
@@ -56,6 +57,15 @@ app.use(fileUpload());
             })
     })
 
+    //Getting Doctors Info
+    app.get('/doctors', (req, res) => {
+        doctorCollection.find({})
+            .toArray((err, documents) => {
+                if (err) res.send(404)
+                res.send(documents);
+            })
+    });
+
     //Add a Doctor
     app.post('/addADoctor', (req, res) => {
         const file = req.files.file;
@@ -63,16 +73,16 @@ app.use(fileUpload());
         const email = req.body.email;
         const newImg = file.data;
         const encImg = newImg.toString('base64');
-        console.log(name,email);
+        console.log(name, email);
 
         const filepath = `${__dirname}/doctors/${file.name}`;
 
-        file.mv(filepath,err => {
-            if(err){
+        file.mv(filepath, err => {
+            if (err) {
                 console.log(err);
-                return res.status(500).send({msg: 'Failed to upload Image'});
+                return res.status(500).send({ msg: 'Failed to upload Image' });
             }
-            return res.send({name: file.name, path: `/${file.name}`})
+            return res.send({ name: file.name, path: `/${file.name}` })
         })
         //Inserted Image Data in MongoDB
         var image = {
@@ -88,16 +98,10 @@ app.use(fileUpload());
 
     })
     //-------------------------------------//
-    //Getting Doctors Info
-    app.get('/doctors', (req, res) => {
-        doctorCollection.find({})
-            .toArray((err, documents) => {
-                res.send(documents);
-            })
-    });
-    
+
+
     //Is Doctor LoggedIn
-    
+
     app.post('/isDoctor', (req, res) => {
         const email = req.body.email;
         doctorCollection.find({ email: email })
@@ -106,9 +110,9 @@ app.use(fileUpload());
             })
     })
 
-    });
+});
 
 
 app.listen(port, () => {
-  console.log(`Doctor Portal Server ${port}`)
+    console.log(`Doctor Portal Server ${port}`)
 })
